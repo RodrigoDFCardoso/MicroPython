@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráficos em Tabela 2x2</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      background-color: #f1f1f1;
+      padding: 10px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #e7e7e7;
+    }
+    .tab.active {
+      background-color: #ffffff;
+      border-bottom: none;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+      border: 1px solid #ccc;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .chart-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* 2 colunas */
+      gap: 20px;
+    }
+    canvas {
+      width: 100% !important; /* Largura responsiva */
+      height: 250px !important; /* Altura fixa */
+    }
+  </style>
+</head>
+<body>
+  <h1>Gráficos em Tabela 2x2</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="openTab(event, 'tab1')">Aba 1</div>
+    <div class="tab" onclick="openTab(event, 'tab2')">Aba 2</div>
+    <div class="tab" onclick="openTab(event, 'tab3')">Aba 3</div>
+  </div>
+
+  <div id="tab1" class="tab-content active">
+    <div class="chart-container">
+      <canvas id="chart1-1"></canvas>
+      <canvas id="chart1-2"></canvas>
+      <canvas id="chart1-3"></canvas>
+      <canvas id="chart1-4"></canvas>
+    </div>
+  </div>
+  <div id="tab2" class="tab-content">
+    <div class="chart-container">
+      <canvas id="chart2-1"></canvas>
+      <canvas id="chart2-2"></canvas>
+      <canvas id="chart2-3"></canvas>
+      <canvas id="chart2-4"></canvas>
+    </div>
+  </div>
+  <div id="tab3" class="tab-content">
+    <div class="chart-container">
+      <canvas id="chart3-1"></canvas>
+      <canvas id="chart3-2"></canvas>
+      <canvas id="chart3-3"></canvas>
+      <canvas id="chart3-4"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Alternar entre abas
+    function openTab(event, tabId) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => tab.classList.remove('active'));
+      contents.forEach(content => content.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Função para criar gráficos
+    function createChart(canvasId, label, data, borderColor) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+          datasets: [{
+            label: label,
+            data: data,
+            borderColor: borderColor,
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true // Garantir proporção correta
+        }
+      });
+    }
+
+    // Criar gráficos para todas as abas
+    createChart('chart1-1', 'Gráfico 1', [10, 20, 30, 40], 'red');
+    createChart('chart1-2', 'Gráfico 2', [15, 25, 35, 45], 'blue');
+    createChart('chart1-3', 'Gráfico 3', [20, 30, 40, 50], 'green');
+    createChart('chart1-4', 'Gráfico 4', [25, 35, 45, 55], 'purple');
+
+    createChart('chart2-1', 'Gráfico 5', [5, 15, 25, 35], 'orange');
+    createChart('chart2-2', 'Gráfico 6', [10, 20, 30, 40], 'cyan');
+    createChart('chart2-3', 'Gráfico 7', [15, 25, 35, 45], 'magenta');
+    createChart('chart2-4', 'Gráfico 8', [20, 30, 40, 50], 'yellow');
+
+    createChart('chart3-1', 'Gráfico 9', [30, 20, 10, 5], 'gray');
+    createChart('chart3-2', 'Gráfico 10', [35, 25, 15, 10], 'black');
+    createChart('chart3-3', 'Gráfico 11', [40, 30, 20, 15], 'pink');
+    createChart('chart3-4', 'Gráfico 12', [45, 35, 25, 20], 'brown');
+  </script>
+</body>
+</html>

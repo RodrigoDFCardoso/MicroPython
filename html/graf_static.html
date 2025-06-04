@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráfico de Dados por Tempo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Gráfico de Dados por Tempo</h1>
+  <canvas id="myChart" width="400" height="200"></canvas>
+
+  <script>
+    // Dados de exemplo
+    const labels = ['2024-11-01', '2024-11-02', '2024-11-03', '2024-11-04', '2024-11-05'];
+    const data = {
+      labels: labels,
+      datasets: [{
+        label: 'Dados coletados',
+        data: [10, 20, 15, 30, 25],
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.4
+      }]
+    };
+
+    // Configuração do gráfico
+    const config = {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Evolução dos Dados' }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Data' } },
+          y: { title: { display: true, text: 'Valores' } }
+        }
+      }
+    };
+
+    // Renderizar o gráfico
+    const ctx = document.getElementById('myChart').getContext('2d');
+    new Chart(ctx, config);
+  </script>
+</body>
+</html>

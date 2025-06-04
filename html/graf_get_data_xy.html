@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráficos Dinâmicos</title>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .tabs { display: flex; cursor: pointer; background-color: #f1f1f1; padding: 10px; }
+    .tab { flex: 1; text-align: center; padding: 10px; border: 1px solid #ccc; background-color: #e7e7e7; }
+    .tab.active { background-color: #ffffff; border-bottom: none; }
+    .tab-content { display: none; padding: 20px; border: 1px solid #ccc; }
+    .tab-content.active { display: block; }
+    .chart-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    canvas { width: 100% !important; height: 250px !important; }
+  </style>
+</head>
+<body>
+  <h1>Gráficos Dinâmicos</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="openTab(event, 'tab1')">Aba 1</div>
+  </div>
+
+  <div id="tab1" class="tab-content active">
+    <div class="chart-container">
+      <canvas id="chart1"></canvas>
+      <canvas id="chart2"></canvas>
+      <canvas id="chart3"></canvas>
+      <canvas id="chart4"></canvas>
+    </div>
+  </div>
+  <div id="tab2" class="tab-content">
+    <div class="chart-container">
+      <canvas id="chart2-1"></canvas>
+      <canvas id="chart2-2"></canvas>
+      <canvas id="chart2-3"></canvas>
+      <canvas id="chart2-4"></canvas>
+    </div>
+  </div>
+  <div id="tab3" class="tab-content">
+    <div class="chart-container">
+      <canvas id="chart3-1"></canvas>
+      <canvas id="chart3-2"></canvas>
+      <canvas id="chart3-3"></canvas>
+      <canvas id="chart3-4"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let charts = [];
+
+    // Alternar entre abas
+    function openTab(event, tabId) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => tab.classList.remove('active'));
+      contents.forEach(content => content.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Criar gráficos iniciais
+    function createChart(canvasId, label, data, color) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(item => item[0]), // Timestamp
+          datasets: [{
+            label: label,
+            data: data.map(item => item[1]), // Valores
+            borderColor: color,
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            x: {
+              type: 'time', // Define o eixo como temporal
+              time: {
+                unit: 'minute', // Define a unidade (ex: minute, hour, day)
+                tooltipFormat: 'yyyy-MM-dd HH:mm:ss' // Formato no tooltip
+              },
+              title: {
+                display: true,
+                text: 'Tempo'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Valor'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true
+            }
+          }
+        }
+      });
+    }
+
+
+    // Inicializar gráficos
+    window.onload = () => {
+      charts.push(createChart('chart1', 'Gráfico 1', 'red'));
+      charts.push(createChart('chart2', 'Gráfico 2', 'blue'));
+      charts.push(createChart('chart3', 'Gráfico 3', 'green'));
+      charts.push(createChart('chart4', 'Gráfico 4', 'purple'));
+
+      // Atualizar dados periodicamente
+      setInterval(fetchData, 10000); // A cada 10 segundos
+    };
+
+    // Buscar dados da Pico W
+    async function fetchData() {
+      try {
+        const response = await fetch('http://192.168.15.23/data');
+        const data = await response.json();
+
+        console.log('Dados recebidos:', data);
+
+        // Verifique se os dados de cada gráfico são arrays
+        if (Array.isArray(data.chart1)) {
+          charts[0].data.labels = data.chart1.map(item => new Date(item[0]));
+          charts[0].data.datasets[0].data = data.chart1.map(item => item[1]);
+        }
+        if (Array.isArray(data.chart2)) {
+          charts[1].data.labels = data.chart2.map(item => new Date(item[0]));
+          charts[1].data.datasets[0].data = data.chart2.map(item => item[1]);
+        }
+        if (Array.isArray(data.chart3)) {
+          charts[2].data.labels = data.chart3.map(item => new Date(item[0]));
+          charts[2].data.datasets[0].data = data.chart3.map(item => item[1]);
+        }
+        if (Array.isArray(data.chart4)) {
+          charts[3].data.labels = data.chart4.map(item => new Date(item[0]));
+          charts[3].data.datasets[0].data = data.chart4.map(item => item[1]);
+        }
+
+        charts.forEach(chart => chart.update()); // Atualiza os gráficos
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    }
+  </script>
+</body>
+</html>

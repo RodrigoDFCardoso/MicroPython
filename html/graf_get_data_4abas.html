@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gráficos Dinâmicos</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .tabs { display: flex; cursor: pointer; background-color: #f1f1f1; padding: 10px; }
+    .tab { flex: 1; text-align: center; padding: 10px; border: 1px solid #ccc; background-color: #e7e7e7; }
+    .tab.active { background-color: #ffffff; border-bottom: none; }
+    .tab-content { display: none; padding: 20px; border: 1px solid #ccc; }
+    .tab-content.active { display: block; }
+    .chart-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    canvas { width: 100% !important; height: 250px !important; }
+  </style>
+</head>
+<body>
+  <h1>Gráficos Dinâmicos</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="openTab(event, 'tab1')">Aba 1</div>
+  </div>
+
+  <div id="tab1" class="tab-content active">
+    <div class="chart-container">
+      <canvas id="chart1"></canvas>
+      <canvas id="chart2"></canvas>
+      <canvas id="chart3"></canvas>
+      <canvas id="chart4"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let charts = [];
+
+    // Alternar entre abas
+    function openTab(event, tabId) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => tab.classList.remove('active'));
+      contents.forEach(content => content.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Criar gráficos iniciais
+    function createChart(canvasId, label, data, color) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr'], // Inicialmente fixo
+          datasets: [{
+            label: label,
+            data: data,
+            borderColor: color,
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true
+        }
+      });
+    }
+
+    // Inicializar gráficos
+    window.onload = () => {
+      charts.push(createChart('chart1', 'Gráfico 1', [0, 0, 0, 0], 'red'));
+      charts.push(createChart('chart2', 'Gráfico 2', [0, 0, 0, 0], 'blue'));
+      charts.push(createChart('chart3', 'Gráfico 3', [0, 0, 0, 0], 'green'));
+      charts.push(createChart('chart4', 'Gráfico 4', [0, 0, 0, 0], 'purple'));
+
+      // Atualizar dados periodicamente
+      setInterval(fetchData, 10000); // A cada 10 segundos
+    };
+
+    // Buscar dados da Pico W
+    async function fetchData() {
+      try {
+        //const response = await fetch('http://<IP_DA_PICO_W>/data'); // Substitua pelo IP da Pico W
+        const response = await fetch('http://192.168.15.23/data');
+        const data = await response.json();
+
+        // Atualizar gráficos com novos dados
+        charts[0].data.datasets[0].data = data.chart1;
+        charts[1].data.datasets[0].data = data.chart2;
+        charts[2].data.datasets[0].data = data.chart3;
+        charts[3].data.datasets[0].data = data.chart4;
+
+        charts.forEach(chart => chart.update()); // Atualizar visualmente
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    }
+  </script>
+</body>
+</html>

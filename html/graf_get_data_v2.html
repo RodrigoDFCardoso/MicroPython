@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMS</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      background-color: #f1f1f1;
+      padding: 10px;
+      justify-content: center;  /* Centraliza as abas */
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #e7e7e7;
+    }
+
+    .tab.active {
+      background-color: #ffffff;
+      border-bottom: none;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 20px;
+      border: 1px solid #ccc;
+      height: calc(100vh - 100px); /* Ajusta a altura para o conteúdo */
+      overflow-y: auto; /* Permite rolar o conteúdo se necessário */
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .chart-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* 2 colunas para os gráficos */
+      gap: 20px;
+      width: 100%;
+      height: 100%; /* Preenche a altura disponível */
+      margin: 0 auto;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important; /* Garante que o canvas ocupe o tamanho do contêiner */
+      max-height: 500px; /* Limita a altura máxima dos gráficos, caso necessário */
+    }
+
+  </style>
+</head>
+<body>
+  <h1>Dados BMS</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="openTab(event, 'tab1')">Temperatura</div>
+    <div class="tab" onclick="openTab(event, 'tab2')">Tensão</div>
+    <div class="tab" onclick="openTab(event, 'tab3')">Corrente</div>
+  </div>
+
+  <div id="tab1" class="tab-content active">
+    <div class="chart-container">
+      <canvas id="temp1"></canvas>
+      <canvas id="temp2"></canvas>
+      <canvas id="temp3"></canvas>
+      <canvas id="temp4"></canvas>
+    </div>
+  </div>
+  <div id="tab2" class="tab-content">
+    <div class="chart-container">
+      <canvas id="voltage1"></canvas>
+      <canvas id="voltage2"></canvas>
+      <canvas id="voltage3"></canvas>
+      <canvas id="voltage4"></canvas>
+    </div>
+  </div>
+  <div id="tab3" class="tab-content">
+    <div class="chart-container">
+      <canvas id="current1"></canvas>
+      <canvas id="current2"></canvas>
+      <canvas id="current3"></canvas>
+      <canvas id="current4"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let temps = [];
+    let currents = [];
+    let voltages = [];
+
+    // Alternar entre abas
+    function openTab(event, tabId) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => tab.classList.remove('active'));
+      contents.forEach(content => content.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Criar gráficos iniciais
+    function createChart(canvasId, time, label, data, color, yLabel) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: time, 
+          datasets: [{
+            label: label,
+            data: data,
+            borderColor: color,
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            size: 20,
+          }]
+        },
+        options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        x: {
+          title: {
+            display: true,       // Habilita o rótulo do eixo Y
+            text: "Timestamp",        // Define o texto do rótulo (ex: "Temperatura", "Tensão", etc.)
+            font: {
+              size: 30,          // Define o tamanho da fonte do rótulo
+            }
+          }
+        },
+        y: {
+          title: {
+            display: true,       // Habilita o rótulo do eixo Y
+            text: yLabel,        // Define o texto do rótulo (ex: "Temperatura", "Tensão", etc.)
+            font: {
+              size: 30,          // Define o tamanho da fonte do rótulo
+            }
+          },
+          ticks: {
+            font: {
+              size: 30,  // Aumenta o tamanho da fonte para os valores no eixo Y
+            }
+          }
+        }
+      }
+    }
+      });
+    }
+
+    // Inicializar gráficos
+    window.onload = () => {
+      temps.push(createChart('temp1', [], 'Bateria 1', [], 'red', 'Temperatura (°C)'));
+      temps.push(createChart('temp2', [], 'Bateria 2', [], 'blue', 'Temperatura (°C)'));
+      temps.push(createChart('temp3', [], 'Bateria 3', [], 'green', 'Temperatura (°C)'));
+      temps.push(createChart('temp4', [], 'Bateria 4', [], 'purple', 'Temperatura (°C)'));
+
+      voltages.push(createChart('voltage1', [], 'Bateria 1', [], 'red', 'Tensão (V)'));
+      voltages.push(createChart('voltage2', [], 'Bateria 2', [], 'blue', 'Tensão (V)'));
+      voltages.push(createChart('voltage3', [], 'Bateria 3', [], 'green', 'Tensão (V)'));
+      voltages.push(createChart('voltage4', [], 'Bateria 4', [], 'purple', 'Tensão (V)'));
+
+      currents.push(createChart('current1', [], 'Bateria 1', [], 'red', 'Corrente (mA)'));
+      currents.push(createChart('current2', [], 'Bateria 2', [], 'blue', 'Corrente (mA)'));
+      currents.push(createChart('current3', [], 'Bateria 3', [], 'green', 'Corrente (mA)'));
+      currents.push(createChart('current4', [], 'Bateria 4', [], 'purple', 'Corrente (mA)'));
+
+      // Atualizar dados periodicamente
+      setInterval(fetchData, 10000); // A cada 10 segundos
+    };
+
+    // Buscar dados da Pico W
+    async function fetchData() {
+      try {
+        //const response = await fetch('http://<IP_DA_PICO_W>/data'); // Substitua pelo IP da Pico W
+        const response = await fetch('http://192.168.15.23/data');
+        const data = await response.json();
+
+        // Atualizar gráficos com novos dados
+        temps[0].data.datasets[0].data = data.temp1;
+        temps[1].data.datasets[0].data = data.temp2;
+        temps[2].data.datasets[0].data = data.temp3;
+        temps[3].data.datasets[0].data = data.temp4;
+
+        voltages[0].data.datasets[0].data = data.voltage1;
+        voltages[1].data.datasets[0].data = data.voltage2;
+        voltages[2].data.datasets[0].data = data.voltage3;
+        voltages[3].data.datasets[0].data = data.voltage4;
+
+        currents[0].data.datasets[0].data = data.current1;
+        currents[1].data.datasets[0].data = data.current2;
+        currents[2].data.datasets[0].data = data.current3;
+        currents[3].data.datasets[0].data = data.current4;
+
+        temps.forEach(temp => temp.update()); // Atualizar visualmente
+        voltages.forEach(voltage => voltage.update());
+        currents.forEach(current => current.update());
+
+        console.log('Dados recebidos:', data);
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    }
+  </script>
+</body>
+</html>
+

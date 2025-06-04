@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abas com Gráfico</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      background-color: #f1f1f1;
+      padding: 10px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #e7e7e7;
+    }
+    .tab.active {
+      background-color: #ffffff;
+      border-bottom: none;
+    }
+    .tab-content {
+      display: none;
+      padding: 20px;
+      border: 1px solid #ccc;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Página com Abas</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="openTab(event, 'tab1')">Gráfico</div>
+    <div class="tab" onclick="openTab(event, 'tab2')">Texto</div>
+    <div class="tab" onclick="openTab(event, 'tab3')">Sobre</div>
+  </div>
+
+  <div id="tab1" class="tab-content active">
+    <canvas id="myChart" width="400" height="200"></canvas>
+  </div>
+  <div id="tab2" class="tab-content">
+    <p>Este é um exemplo de aba com texto simples. Adicione aqui o conteúdo desejado.</p>
+  </div>
+  <div id="tab3" class="tab-content">
+    <p>Esta aba pode conter informações adicionais, como uma descrição do gráfico ou outros detalhes.</p>
+  </div>
+
+  <script>
+    // Script para alternar entre as abas
+    function openTab(event, tabId) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => tab.classList.remove('active'));
+      contents.forEach(content => content.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Renderizando o gráfico na aba 1
+    const ctx = document.getElementById('myChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril'],
+        datasets: [{
+          label: 'Vendas',
+          data: [10, 20, 15, 30],
+          borderColor: 'blue',
+          backgroundColor: 'rgba(0, 0, 255, 0.1)',
+        }]
+      },
+      options: {
+        responsive: true
+      }
+    });
+  </script>
+</body>
+</html>
