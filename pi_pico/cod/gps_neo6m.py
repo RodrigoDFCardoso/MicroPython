@@ -1,7 +1,7 @@
 from machine import UART, Pin
 import utime
 
-# UART1: TX=GPIO0, RX=GPIO1
+# UART0: TX=GPIO0, RX=GPIO1
 uart = UART(0,baudrate=9600, tx=Pin(0), rx=Pin(1))
 
 
