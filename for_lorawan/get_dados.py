@@ -1,20 +1,27 @@
 from machine import Pin, SoftI2C, UART
+from micropyGPS import MicropyGPS
+import bme280_float as bme280
 import ssd1306
 import time
 
-# Endereço I2C do INA226
+# Endereço i2c_ina226 do INA226
 INA226_ADDR = 0x40  # Endereço padrão do INA226
 
-# Configuração I2C para o INA226
-i2c = SoftI2C(scl=Pin(3), sda=Pin(2))  # SCL e SDA conforme seu setup
+# Configuração i2c_ina226 para o INA226
+i2c_ina226 = SoftI2C(scl=Pin(3), sda=Pin(2))  # SCL e SDA conforme seu setup
+
+# Configuração i2c_bme280 para o BME280
+i2c_bme280 = SoftI2C(scl=Pin(3), sda=Pin(2))
 
 #UART GPS NEO06m
 uart = UART(0,baudrate=9600, tx=Pin(0), rx=Pin(1))
 
-# Configuração I2C para o OLED
+gps = MicropyGPS()
+
+# Configuração i2c_ina226 para o OLED
 oled_width = 128
 oled_height = 64
-oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
+oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c_ina226)
 
 # Definir registradores
 CONFIG_REG = 0x00
@@ -28,17 +35,17 @@ CALIBRATION_REG = 0x05
 def configurar_ina226():
     # Configurar o INA226 para uma leitura contínua de corrente e potência
     config = 0x4127  # Configuração: medir corrente, potência e tensão (exemplo)
-    i2c.writeto_mem(INA226_ADDR, CONFIG_REG, bytearray([config >> 8, config & 0xFF]))
+    i2c_ina226.writeto_mem(INA226_ADDR, CONFIG_REG, bytearray([config >> 8, config & 0xFF]))
 
 # Função para ler a tensão no barramento (VBUS)
 def ler_tensao_bus():
-    data = i2c.readfrom_mem(INA226_ADDR, BUS_VOLTAGE_REG, 2)
+    data = i2c_ina226.readfrom_mem(INA226_ADDR, BUS_VOLTAGE_REG, 2)
     bus_voltage = (data[0] << 8 | data[1]) * 1.25 / 1000  # Conversão para Volts (1.25mV/bit)
     return bus_voltage
 
 # Função para ler a tensão no resistor de shunt
 def ler_tensao_shunt():
-    data = i2c.readfrom_mem(INA226_ADDR, SHUNT_VOLTAGE_REG, 2)
+    data = i2c_ina226.readfrom_mem(INA226_ADDR, SHUNT_VOLTAGE_REG, 2)
     raw = (data[0] << 8) | data[1]
     if raw > 32767:
         raw -= 65536  # Corrigir valor negativo (conversão de complemento de dois)
@@ -77,58 +84,54 @@ def exibir_no_oled(v_bus, corrente, potencia, lat, lon, hora):
     oled.text("GPS:{},{}".format(lat, lon), 0, 48) 
     oled.show()  # Atualizar o display
 
-def parse_gprmc(linha):
-    try:
-        partes = linha.split(',')
-        if partes[0] == '$GPRMC' and partes[2] == 'A':  # A = válido
-            hora = partes[1]
-            # print(hora)
-            lat_raw = partes[3]
-            lat_dir = partes[4]
-            lon_raw = partes[5]
-            lon_dir = partes[6]
-
-            # Converter latitude
-            lat_graus = int(lat_raw[:2])
-            lat_min = float(lat_raw[2:])
-            latitude = lat_graus + lat_min / 60.0
-            #if lat_dir == 'S':
-               # latitude = -latitude
-            latitude = f'{latitude:.1f}{lat_dir}'
-            
-            # Converter longitude
-            lon_graus = int(lon_raw[:3])
-            lon_min = float(lon_raw[3:])
-            longitude = lon_graus + lon_min / 60.0
-            #if lon_dir == 'W':
-               # longitude = -longitude
-            longitude = f'{longitude:.1f}{lon_dir}'
-            # Converter hora
-            horas = hora[0:2]
-            minutos = hora[2:4]
-            segundos = hora[4:6]
-            horario = f"{horas}:{minutos}:{segundos} UTC"
-
-            return latitude, longitude, horario
-        else:
-            return None, None, None
-    except:
-        pass
-    return None, None, None
-
-def gps_signal():
+def update_gps():
     if uart.any():
         linha = uart.readline()
         if linha:
             try:
-                linha = linha.decode('utf-8').strip()
-                print(linha)
-                lat, lon, hora = parse_gprmc(linha)
-                if lat and lon:
-                    #print(f"Latitude: {lat:.6f}, Longitude: {lon:.6f}, Horário: {hora}")
-                    return [lat, lon, hora]
-            except UnicodeError:
-                pass
+                for b in linha:
+                    gps.update(chr(b))
+            except Exception as e:
+                print('Erro ao processar linha:', e)
+
+def mostrar_gps():
+    if gps.latitude[0] != 0:
+        lat = gps.latitude[0] + gps.latitude[1] / 60.0
+        if gps.latitude[2] == 'S':
+            lat = -lat
+
+        lon = gps.longitude[0] + gps.longitude[1] / 60.0
+        if gps.longitude[2] == 'W':
+            lon = -lon
+
+        try:
+            hora = '{:02}:{:02}:{:02}'.format(gps.timestamp[0], gps.timestamp[1], gps.timestamp[2])
+        except:
+            hora = "Hora indisponível"
+
+        try:
+            data = '{:02}/{:02}/{:02}'.format(gps.date[2], gps.date[1], gps.date[0])
+        except:
+            data = "Data indisponível"
+        ano = gps.date[2] + 2000
+        tempo = (ano, gps.date[1], gps.date[0], int(gps.timestamp[0]), int(gps.timestamp[1]), int(gps.timestamp[2]), 0, 0)
+        timestamp_ = time.mktime(tempo)
+        print("timestamp: ", timestamp_)
+        print('Latitude:', lat)
+        print('Longitude:', lon)
+        print('Altitude:', gps.altitude)
+        print('Data:', data)
+        print('Hora:', hora)
+        print(gps.timestamp)
+        print(gps.date)
+        return lat, lon, gps.altitude, data, hora
+    else:
+        print('Aguardando fix do GPS...')
+
+def bme280_values():
+    bme = bme280.BME280(i2c=i2c_bme280)
+    
+    return bme.values
 
 loc = [0, 0, 0]
 # Loop principal
@@ -137,12 +140,15 @@ while True:
     v_bus = ler_tensao_bus()
     corrente = ler_corrente(shunt_resistor)
     potencia = calcular_potencia(v_bus, corrente)
-    dados_gps = gps_signal()
-    if  dados_gps != None:
-        loc= dados_gps
+    update_gps()
+    if mostrar_gps() != None:
+        loc = mostrar_gps()
+    # loc = [gps_data[], lon, hora]
+    print(f"v: {v_bus}, i: {corrente}, p: {potencia}")
+    print(bme280_values())
     print(loc)
     # Exibir no OLED
     exibir_no_oled(v_bus, corrente, potencia, loc[0], loc[1], loc[2])
 
-    time.sleep(1)
+    time.sleep(5)
 
