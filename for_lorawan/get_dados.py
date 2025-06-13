@@ -14,7 +14,7 @@ i2c_ina226 = SoftI2C(scl=Pin(3), sda=Pin(2))  # SCL e SDA conforme seu setup
 i2c_bme280 = SoftI2C(scl=Pin(3), sda=Pin(2))
 
 #UART GPS NEO06m
-uart = UART(0,baudrate=9600, tx=Pin(0), rx=Pin(1))
+uart = UART(1,baudrate=9600, tx=Pin(8), rx=Pin(9))
 
 gps = MicropyGPS()
 

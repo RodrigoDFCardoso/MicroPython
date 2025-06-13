@@ -13,8 +13,8 @@ i2c_ina226 = SoftI2C(scl=Pin(3), sda=Pin(2))  # SCL e SDA conforme seu setup
 # Configuração i2c_bme280 para o BME280
 i2c_bme280 = SoftI2C(scl=Pin(3), sda=Pin(2))
 
-#UART GPS NEO06m (GP08 e GP09)
-uart = UART(1,baudrate=9600, tx=Pin(8), rx=Pin(9))
+#UART GPS NEO06m
+uart = UART(0,baudrate=9600, tx=Pin(0), rx=Pin(1))
 
 gps = MicropyGPS()
 
@@ -74,15 +74,14 @@ configurar_ina226()
 shunt_resistor = 0.1  # 0.1 ohms
 
 # Função para exibir informações no OLED
-def exibir_no_oled(v_bus, corrente, potencia, loc, bme280):
+def exibir_no_oled(v_bus, corrente, potencia, lat, lon, hora):
     oled.fill(0)  # Limpar o display
-    oled.text("{:.2f}V {}".format(v_bus,loc[3]), 0, 0)  # Primeira linha: Tensão
+    oled.text("V:{:.2f}V {}".format(v_bus, hora), 0, 0)  # Primeira linha: Tensão
     # Corrente com sinal
-    oled.text("{:+.2f}mA {}".format(corrente, bme280[0]), 0, 8)  # Corrente (mA) com sinal
-    oled.text("{:+.2f}mW".format(potencia), 0, 32)  # Potência (mW)
+    oled.text("I: {:+.2f}mA".format(corrente), 0, 16)  # Corrente (mA) com sinal
+    oled.text("P: {:+.2f}mW".format(potencia), 0, 32)  # Potência (mW)
     #oled.text("Shunt: {:+.3f}mV".format(ler_tensao_shunt() * -1000), 0, 48)  # Tensão de Shunt (mV)
-    oled.text("GPS:{:.1f},{:.1f}".format(loc[0], loc[1]), 0, 16)
-    oled.text("GPS:{:.1f},{:.1f}".format(loc[0], loc[1]), 0, 24) 
+    oled.text("GPS:{},{}".format(lat, lon), 0, 48) 
     oled.show()  # Atualizar o display
 
 def update_gps():
@@ -114,56 +113,43 @@ def mostrar_gps():
             data = '{:02}/{:02}/{:02}'.format(gps.date[2], gps.date[1], gps.date[0])
         except:
             data = "Data indisponível"
-
-        try:
-            ano = gps.date[2] + 2000
-            tempo = (ano, gps.date[1], gps.date[0], int(gps.timestamp[0]), int(gps.timestamp[1]), int(gps.timestamp[2]), 0, 0)
-            timestamp_ = time.mktime(tempo)
-        except:
-            timestamp_ = 0
-        
-        #(-22.81415, -47.021, 0.0, '25/06/12', '19:08:35', 1749755315)
-        return lat, lon, gps.altitude, data, hora, timestamp_
+        ano = gps.date[2] + 2000
+        tempo = (ano, gps.date[1], gps.date[0], int(gps.timestamp[0]), int(gps.timestamp[1]), int(gps.timestamp[2]), 0, 0)
+        timestamp_ = time.mktime(tempo)
+        print("timestamp: ", timestamp_)
+        print('Latitude:', lat)
+        print('Longitude:', lon)
+        print('Altitude:', gps.altitude)
+        print('Data:', data)
+        print('Hora:', hora)
+        print(gps.timestamp)
+        print(gps.date)
+        return lat, lon, gps.altitude, data, hora
     else:
         print('Aguardando fix do GPS...')
 
 def bme280_values():
-    bme = bme280.BME280(i2c=i2c_bme280)  
+    bme = bme280.BME280(i2c=i2c_bme280)
+    
     return bme.values
 
 loc = [0, 0, 0, 0, 0]
-
-def data_lora():
-    #dados GPS
-    data_gps = [0, 0, 0, 0, 0]
-    update_gps()
-    if mostrar_gps() != None:
-        data_gps = mostrar_gps()
-    #dados INA226
-    v_bus = ler_tensao_bus()
-    corrente = ler_corrente(shunt_resistor)
-    potencia = calcular_potencia(v_bus, corrente)
-    #dados bme280
-    bme280_data = bme280_values()
-    #print("teste gps",data_gps)
-    return {
-        'v_bus': v_bus,
-        'corrente': corrente,
-        'potencia': potencia,
-        'gps': [data_gps[0], data_gps[1], data_gps[-1]],
-        'temp': bme280_data[0],
-        'umid': bme280_data[2]
-    }
-
-
 # Loop principal
 while True:
     # Ler valores
-    
-    print(str(data_lora()))
-
+    v_bus = ler_tensao_bus()
+    corrente = ler_corrente(shunt_resistor)
+    potencia = calcular_potencia(v_bus, corrente)
+    update_gps()
+    if mostrar_gps() != None:
+        loc = mostrar_gps()
+    # loc = [gps_data[], lon, hora]
+    print(f"v: {v_bus}, i: {corrente}, p: {potencia}")
+    print(bme280_values())
+    print(loc)
+    # Exibir no OLED
+    exibir_no_oled(v_bus, corrente, potencia, loc[0], loc[1], loc[4])
 
     time.sleep(5)
-
 
 
