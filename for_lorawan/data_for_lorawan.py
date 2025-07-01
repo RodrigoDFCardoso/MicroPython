@@ -146,7 +146,13 @@ def data_lora():
     #dados bme280
     bme280_data = bme280_values()
     #print("teste gps",data_gps)
-    return {
+    saida = "[{0}, {1}, {2}, {3}, {4}, {5}, {6}]".format(
+        data_gps[0], data_gps[1], data_gps[-1],
+        v_bus, corrente,
+        bme280_data[0], bme280_data[2])
+    return saida
+
+'''{
         'v_bus': v_bus,
         'corrente': corrente,
         'potencia': potencia,
@@ -154,16 +160,5 @@ def data_lora():
         'temp': bme280_data[0],
         'umid': bme280_data[2]
     }
-
-
-# Loop principal
-while True:
-    # Ler valores
-    
-    print(str(data_lora()))
-
-
-    time.sleep(5)
-
-
+'''
 
